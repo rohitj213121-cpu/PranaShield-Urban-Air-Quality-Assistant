@@ -1,0 +1,6 @@
+{
+  "name": "VayuMitra - Urban Air Quality Assistant",
+  "description": "AI-powered urban air quality dashboard helping families in Indian cities track live AQI, plan safe outdoor windows, adopt low-emission daily habits, and purify indoor air.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
