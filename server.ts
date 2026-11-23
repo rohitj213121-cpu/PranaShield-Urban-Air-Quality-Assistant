@@ -376,6 +376,73 @@ Respond in ${langLabel}. Keep your response clear, scannable (use short bullet p
     }
   });
 
+  // 5. AI Clean-Air Safe Haven & Micro-Route Advisor
+  app.post('/api/safe-havens', async (req, res) => {
+    try {
+      const { city, aqi, pm25, bestWindow, language } = req.body ?? {};
+      const cityName = String(city || 'Delhi').trim();
+      const langLabel =
+        language === 'hi' ? 'Hindi (Devanagari script, natural everyday Indian Hindi)' : 'English';
+
+      const ai = getAiClient();
+      const text = await generateWithFailover(async (model, thinkingLevel) => {
+        const response = await ai.models.generateContent({
+          model,
+          contents: `Recommend 3 real, well-known clean-air micro-zones in ${cityName}, India (current city AQI: ${aqi}, PM2.5: ${pm25} µg/m³, lowest smog window: ${bestWindow}).
+Include:
+1) A dense urban forest or biodiversity reserve,
+2) A major botanical park / green canopy garden,
+3) An indoor HEPA-filtered public sanctuary (library, cultural centre, museum, or modern mall atrium).
+Respond entirely in ${langLabel}. Keep estimated reductions realistic (e.g., 25–42% for dense green canopies, 55–75% for HEPA indoor venues).`,
+          config: {
+            systemInstruction:
+              'You are PranaShield Micro-Climate Advisor for Indian cities. Suggest authentic local green spaces and HEPA-filtered indoor venues with practical micro-route walking tips away from arterial traffic.',
+            ...(thinkingLevel ? { thinkingConfig: { thinkingLevel } } : {}),
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                citySummary: { type: Type.STRING },
+                zones: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      name: { type: Type.STRING },
+                      zoneType: { type: Type.STRING, description: 'One of forest, park, indoor_hepa' },
+                      typeLabel: { type: Type.STRING },
+                      pm25ReductionPct: { type: Type.INTEGER },
+                      estimatedAqi: { type: Type.INTEGER },
+                      bestWindow: { type: Type.STRING },
+                      microRouteTip: { type: Type.STRING },
+                    },
+                    required: [
+                      'name',
+                      'zoneType',
+                      'typeLabel',
+                      'pm25ReductionPct',
+                      'estimatedAqi',
+                      'bestWindow',
+                      'microRouteTip',
+                    ],
+                  },
+                },
+              },
+              required: ['citySummary', 'zones'],
+            },
+          },
+        });
+        return (response.text ?? '{}').trim();
+      });
+
+      const parsed = JSON.parse(text);
+      return res.json(parsed);
+    } catch (err) {
+      const mapped = mapAiError(err);
+      return res.status(mapped.status).json({ error: mapped.message });
+    }
+  });
+
   // Ensure unmatched /api/* routes always return JSON, never HTML
   app.use('/api/*', (_req, res) => {
     res.status(404).json({ error: 'API endpoint not found.' });

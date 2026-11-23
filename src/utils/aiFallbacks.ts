@@ -4,6 +4,8 @@ import type {
   Language,
   OutdoorActivityId,
   PlannerAdvice,
+  SafeHavensResponse,
+  SafeHavenZone,
   UserProfileId,
 } from '../types/airQuality';
 
@@ -280,3 +282,220 @@ export function buildFallbackCoachTip(
   ];
   return tips[seedIndex % tips.length];
 }
+
+interface CitySafeHavenSeed {
+  name: { en: string; hi: string };
+  zoneType: SafeHavenZone['zoneType'];
+  typeLabel: { en: string; hi: string };
+  pm25ReductionPct: number;
+  bestWindow?: string;
+  microRouteTip: { en: string; hi: string };
+}
+
+const CITY_HAVEN_SEEDS: Record<string, CitySafeHavenSeed[]> = {
+  delhi: [
+    {
+      name: { en: 'Sanjay Van Urban Forest', hi: 'संजय वन शहरी जंगल' },
+      zoneType: 'forest',
+      typeLabel: { en: 'Dense Urban Forest', hi: 'घना शहरी जंगल' },
+      pm25ReductionPct: 38,
+      microRouteTip: {
+        en: 'Enter via Qutab Institutional Area gate and walk deep ridge trails 250m inside from Outer Ring Road.',
+        hi: 'कुतुब इंस्टीट्यूशनल एरिया गेट से प्रवेश करें और आउटर रिंग रोड से 250 मीटर अंदर घने पेड़ों के बीच चलें।',
+      },
+    },
+    {
+      name: { en: 'Lodhi Garden Botanical Canopy', hi: 'लोधी गार्डन हरित उद्यान' },
+      zoneType: 'park',
+      typeLabel: { en: 'Heritage Botanical Park', hi: 'बॉटनिकल हेरिटेज पार्क' },
+      pm25ReductionPct: 32,
+      microRouteTip: {
+        en: 'Arrive via Jor Bagh Metro; stick to central Bada Gumbad lawns away from Lodhi Road traffic.',
+        hi: 'जोर बाग मेट्रो से आएं और लोधी रोड ट्रैफिक से दूर मध्य लॉन व बारा गुंबद के पास रहें।',
+      },
+    },
+    {
+      name: { en: 'India Habitat Centre / HEPA Reading Wing', hi: 'इंडिया हैबिटेट सेंटर / HEPA इंडोर विंग' },
+      zoneType: 'indoor_hepa',
+      typeLabel: { en: 'HEPA-Filtered Indoor Haven', hi: 'HEPA-फ़िल्टर्ड इंडोर स्थान' },
+      pm25ReductionPct: 68,
+      bestWindow: '10:00 AM – 8:00 PM',
+      microRouteTip: {
+        en: 'Use Jor Bagh or Khan Market Metro feeder; climate-controlled indoor lounges keep PM2.5 low all day.',
+        hi: 'खान मार्केट मेट्रो से पहुंचें; नियंत्रित वेंटिलेशन वाले इंडोर हॉल पूरे दिन सुरक्षित रहते हैं।',
+      },
+    },
+  ],
+  noida: [
+    {
+      name: { en: 'Okhla Bird Sanctuary', hi: 'ओखला पक्षी विहार' },
+      zoneType: 'forest',
+      typeLabel: { en: 'Wetland & Riparian Reserve', hi: 'आर्द्रभूमि व हरित अभयारण्य' },
+      pm25ReductionPct: 35,
+      microRouteTip: {
+        en: 'Take Magenta Line to Okhla Bird Sanctuary Metro and follow riverside tree-lined mud tracks.',
+        hi: 'मजेंटा लाइन मेट्रो से पहुंचें और यमुना किनारे पेड़ों से ढके शांत पथ पर टहलें।',
+      },
+    },
+    {
+      name: { en: 'Meghdootam Park (Sector 50)', hi: 'मेघदूतम पार्क (सेक्टर 50)' },
+      zoneType: 'park',
+      typeLabel: { en: 'Dense Neighborhood Park', hi: 'घना सेक्टर पार्क' },
+      pm25ReductionPct: 29,
+      microRouteTip: {
+        en: 'Enter from internal Sector 50 lane rather than Dadri Main Road to dodge construction dust.',
+        hi: 'दादरी मेन रोड की धूल से बचने के लिए सेक्टर 50 की अंदरूनी लेन से प्रवेश करें।',
+      },
+    },
+    {
+      name: { en: 'DLF Mall of India HEPA Atrium', hi: 'DLF मॉल ऑफ इंडिया HEPA एट्रियम' },
+      zoneType: 'indoor_hepa',
+      typeLabel: { en: 'MERV-13 / HEPA Indoor Hub', hi: 'HEPA-फ़िल्टर्ड इंडोर परिसर' },
+      pm25ReductionPct: 65,
+      bestWindow: '11:00 AM – 8:30 PM',
+      microRouteTip: {
+        en: 'Direct walk from Noida Sector 18 Metro keeps family errands & indoor walks away from roadside smog.',
+        hi: 'सेक्टर 18 मेट्रो से सीधा प्रवेश परिवार की सैर व जरूरी कामों को बाहरी धुंध से बचाता है।',
+      },
+    },
+  ],
+  gurugram: [
+    {
+      name: { en: 'Aravalli Biodiversity Park', hi: 'अरावली बायोडायवर्सिटी पार्क' },
+      zoneType: 'forest',
+      typeLabel: { en: 'Aravalli Forest Reserve', hi: 'अरावली वन क्षेत्र' },
+      pm25ReductionPct: 39,
+      microRouteTip: {
+        en: 'Take Rapid Metro to Guru Dronacharya; walk the inner ridge loops shielded from NH-48 exhaust.',
+        hi: 'गुरु द्रोणाचार्य मेट्रो से आएं और NH-48 ट्रैफिक से दूर अंदरूनी पहाड़ी पगडंडियों पर रहें।',
+      },
+    },
+    {
+      name: { en: 'Leisure Valley Park (Sector 29)', hi: 'लीज़र वैली पार्क (सेक्टर 29)' },
+      zoneType: 'park',
+      typeLabel: { en: 'Botanical Green Oasis', hi: 'बॉटनिकल ग्रीन पार्क' },
+      pm25ReductionPct: 31,
+      microRouteTip: {
+        en: 'Use shaded inner rose-garden paths far from IFFCO Chowk signalized junction.',
+        hi: 'इफको चौक के धुएं से दूर पार्क के बीच वाले हरित व छायादार मार्ग का उपयोग करें।',
+      },
+    },
+    {
+      name: { en: 'Ambience / CyberHub Filtered Galleries', hi: 'साइबरहब / एंबिएंस फ़िल्टर्ड इंडोर ज़ोन' },
+      zoneType: 'indoor_hepa',
+      typeLabel: { en: 'Filtered Indoor Sanctuary', hi: 'फ़िल्टर्ड इंडोर परिसर' },
+      pm25ReductionPct: 64,
+      bestWindow: '10:30 AM – 8:00 PM',
+      microRouteTip: {
+        en: 'Arrive via IndusInd Bank CyberCity Rapid Metro; indoor climate zones offer calm filtered breathing.',
+        hi: 'रैपिड मेट्रो से पहुंचकर इंडोर वेंटिलेटेड गैलरी में सुरक्षित समय बिताएं।',
+      },
+    },
+  ],
+  mumbai: [
+    {
+      name: { en: 'Sanjay Gandhi National Park (Borivali)', hi: 'संजय गांधी राष्ट्रीय उद्यान (बोरीवली)' },
+      zoneType: 'forest',
+      typeLabel: { en: 'Tropical Urban Forest', hi: 'घना शहरी राष्ट्रीय वन' },
+      pm25ReductionPct: 44,
+      microRouteTip: {
+        en: 'Walk past the main gate by 1 km or cycle shaded Gandhi Tekdi trails for crisp forest air.',
+        hi: 'मुख्य द्वार से 1 किमी अंदर गांधी टेकड़ी मार्ग पर पेड़ों के बीच स्वच्छ हवा का आनंद लें।',
+      },
+    },
+    {
+      name: { en: 'Hanging Gardens & Kamala Nehru Park', hi: 'हैंडिंग गार्डन और कमला नेहरू पार्क' },
+      zoneType: 'park',
+      typeLabel: { en: 'Elevated Coastal Canopy', hi: 'ऊंचाई वाला हरित उद्यान' },
+      pm25ReductionPct: 34,
+      microRouteTip: {
+        en: 'Malabar Hill elevation and sea breeze clear fine particulates fastest here after 11 AM.',
+        hi: 'मालाबार हिल की ऊंचाई और समुद्री हवा से 11 बजे के बाद यहां हवा सबसे साफ रहती है।',
+      },
+    },
+    {
+      name: { en: 'NMACC & Jio World HEPA Cultural Centre', hi: 'NMACC और BKC HEPA कल्चरल सेंटर' },
+      zoneType: 'indoor_hepa',
+      typeLabel: { en: 'HEPA-Filtered Indoor Haven', hi: 'HEPA-फ़िल्टर्ड इंडोर सेंटर' },
+      pm25ReductionPct: 66,
+      bestWindow: '11:00 AM – 8:00 PM',
+      microRouteTip: {
+        en: 'Ideal during afternoon BKC construction dust spikes; indoor lobbies keep particulate count minimal.',
+        hi: 'BKC निर्माण धूल बढ़ने पर वातानुकूलित व फ़िल्टर्ड इंडोर गैलरी सुरक्षित विकल्प है।',
+      },
+    },
+  ],
+};
+
+function buildGenericCitySeeds(city: CityAirData): CitySafeHavenSeed[] {
+  return [
+    {
+      name: {
+        en: `${city.name.en} Reserve Forest / Green Belt`,
+        hi: `${city.name.hi} रिज़र्व वन / ग्रीन बेल्ट`,
+      },
+      zoneType: 'forest',
+      typeLabel: { en: 'Dense Urban Forest', hi: 'घना शहरी जंगल' },
+      pm25ReductionPct: 36,
+      microRouteTip: {
+        en: `Choose interior tree-canopy trails at least 200m away from ${city.station.en} main arterial roads.`,
+        hi: `${city.station.hi} की मुख्य सड़कों से कम से कम 200 मीटर अंदर पेड़ों से घिरे मार्ग चुनें।`,
+      },
+    },
+    {
+      name: {
+        en: `${city.name.en} Central Botanical Garden`,
+        hi: `${city.name.hi} सेंट्रल बॉटनिकल गार्डन`,
+      },
+      zoneType: 'park',
+      typeLabel: { en: 'Botanical Park Canopy', hi: 'बॉटनिकल पार्क' },
+      pm25ReductionPct: 30,
+      microRouteTip: {
+        en: 'Use shaded inner lawns and fountains during midday sun when ground inversion weakens.',
+        hi: 'दोपहर की धूप में जब धुंध कम हो, तब पार्क के मध्य हरे लॉन में टहलें।',
+      },
+    },
+    {
+      name: {
+        en: `${city.name.en} HEPA Public Library / Cultural Atrium`,
+        hi: `${city.name.hi} HEPA इंडोर लाइब्रेरी / कल्चरल सेंटर`,
+      },
+      zoneType: 'indoor_hepa',
+      typeLabel: { en: 'HEPA-Filtered Indoor Haven', hi: 'HEPA-फ़िल्टर्ड इंडोर स्थान' },
+      pm25ReductionPct: 65,
+      bestWindow: '10:30 AM – 8:00 PM',
+      microRouteTip: {
+        en: 'Spend peak morning/evening smog hours in MERV-13/HEPA ventilated indoor community halls.',
+        hi: 'सुबह और शाम के चरम स्मॉग के समय फ़िल्टर्ड इंडोर हॉल या लाइब्रेरी में रहें।',
+      },
+    },
+  ];
+}
+
+export function buildFallbackSafeHavens(
+  city: CityAirData,
+  language: Language
+): SafeHavensResponse {
+  const seeds = CITY_HAVEN_SEEDS[city.id] || buildGenericCitySeeds(city);
+
+  const zones: SafeHavenZone[] = seeds.map((seed) => {
+    const estimatedAqi = Math.max(22, Math.round(city.aqi * (1 - seed.pm25ReductionPct / 100)));
+    return {
+      name: seed.name[language],
+      zoneType: seed.zoneType,
+      typeLabel: seed.typeLabel[language],
+      pm25ReductionPct: seed.pm25ReductionPct,
+      estimatedAqi,
+      bestWindow: seed.bestWindow || city.bestWindow,
+      microRouteTip: seed.microRouteTip[language],
+    };
+  });
+
+  const citySummary =
+    language === 'hi'
+      ? `${city.name.hi} (AQI ${city.aqi}) के भीतर घने हरित क्षेत्रों और HEPA इंडोर स्थानों में 30%–68% कम PM2.5 मिलता है।`
+      : `Tree canopies and HEPA indoor venues in ${city.name.en} (city AQI ${city.aqi}) cut PM2.5 exposure by 30%–68%.`;
+
+  return { citySummary, zones };
+}
+

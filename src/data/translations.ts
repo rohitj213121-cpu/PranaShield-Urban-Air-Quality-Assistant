@@ -33,6 +33,36 @@ interface UiCopy {
     peakLabel: string;
     lowLabel: string;
   };
+  lungMeter: {
+    sectionTitle: string;
+    sectionSubtitle: string;
+    cigarettesUnit: string;
+    perDaySuffix: string;
+    recoveryLabel: string;
+    recoveryUnit: string;
+    weeklyLabel: string;
+    whoMultipleLabel: string;
+    visualLabel: string;
+    formulaNote: string;
+    severityLow: string;
+    severityModerate: string;
+    severityHigh: string;
+    severitySevere: string;
+  };
+  safeHavens: {
+    sectionTitle: string;
+    sectionSubtitle: string;
+    findBtn: string;
+    refreshBtn: string;
+    searchingBtn: string;
+    aiBadge: string;
+    promptTitle: string;
+    promptDesc: string;
+    pm25DropLabel: string;
+    estAqiLabel: string;
+    bestWindowLabel: string;
+    routeTipLabel: string;
+  };
   verdicts: Record<VerdictLevel, { title: string; action: string }>;
   planner: {
     sectionTitle: string;
@@ -123,6 +153,37 @@ export const UI_COPY: Record<Language, UiCopy> = {
       customCityBadge: 'AI-Estimated City Telemetry',
       peakLabel: 'Peak',
       lowLabel: 'Lowest',
+    },
+    lungMeter: {
+      sectionTitle: 'Smog-to-Cigarette Equivalent & Lung Impact Meter',
+      sectionSubtitle: '24-hour passive smoke equivalence based on current PM2.5 density.',
+      cigarettesUnit: 'cigarettes',
+      perDaySuffix: '/ day',
+      recoveryLabel: 'Est. Lung Recovery',
+      recoveryUnit: 'hrs clean air',
+      weeklyLabel: '7-Day Burden',
+      whoMultipleLabel: 'WHO 24h Limit',
+      visualLabel: '24-Hour Lung Equivalence',
+      formulaNote: 'Berkeley Earth standard: ~1 cigarette equals 22 µg/m³ of PM2.5 breathed for 24 hours.',
+      severityLow: 'Minimal Burden',
+      severityModerate: 'Light Passive Load',
+      severityHigh: 'Heavy Airway Stress',
+      severitySevere: 'Severe Lung Strain',
+    },
+    safeHavens: {
+      sectionTitle: 'AI Clean-Air Safe Haven & Micro-Route Advisor',
+      sectionSubtitle: 'Discover 3 low-AQI micro-zones—urban forests, botanical parks, and HEPA indoor sanctuaries.',
+      findBtn: 'Find Nearest Clean-Air Zones',
+      refreshBtn: 'Refresh Clean-Air Zones',
+      searchingBtn: 'Scanning micro-zones...',
+      aiBadge: '✨ PranaShield Micro-Climate AI',
+      promptTitle: 'Locate Cleaner Breathing Pockets Nearby',
+      promptDesc:
+        'Use AI micro-climate guidance to pinpoint urban green canopies and HEPA-filtered indoor havens with lower PM2.5 and safer walking routes.',
+      pm25DropLabel: 'PM2.5 Drop',
+      estAqiLabel: 'Est. Zone AQI',
+      bestWindowLabel: 'Best Visit Window',
+      routeTipLabel: 'Micro-Route Tip',
     },
     verdicts: {
       GO: { title: 'GO', action: 'Air is safe for normal outdoor routines.' },
@@ -236,6 +297,37 @@ export const UI_COPY: Record<Language, UiCopy> = {
       customCityBadge: 'AI अनुमानित शहर डेटा',
       peakLabel: 'उच्चतम',
       lowLabel: 'न्यूनतम',
+    },
+    lungMeter: {
+      sectionTitle: 'स्मॉग-से-सिगरेट समतुल्य और फेफड़ों पर असर मीटर',
+      sectionSubtitle: 'मौजूदा PM2.5 स्तर के आधार पर 24 घंटे का निष्क्रिय धुएं के बराबर प्रभाव।',
+      cigarettesUnit: 'सिगरेट',
+      perDaySuffix: '/ दिन',
+      recoveryLabel: 'अनुमानित रिकवरी',
+      recoveryUnit: 'घंटे साफ हवा',
+      weeklyLabel: 'साप्ताहिक भार',
+      whoMultipleLabel: 'WHO 24h सीमा',
+      visualLabel: '24 घंटे का फेफड़ों पर भार',
+      formulaNote: 'बर्कले अर्थ मानक: 24 घंटे में 22 µg/m³ PM2.5 सांस लेना लगभग 1 सिगरेट पीने के बराबर है।',
+      severityLow: 'न्यूनतम भार',
+      severityModerate: 'हल्का धुआं भार',
+      severityHigh: 'अधिक श्वसन दबाव',
+      severitySevere: 'गंभीर फेफड़ों पर दबाव',
+    },
+    safeHavens: {
+      sectionTitle: 'AI क्लीन-एयर सेफ हेवन और माइक्रो-रूट सलाहकार',
+      sectionSubtitle: 'कम AQI वाले 3 नज़दीकी क्षेत्र खोजें — शहरी जंगल, बॉटनिकल पार्क और HEPA-फ़िल्टर्ड इंडोर स्थान।',
+      findBtn: 'नज़दीकी क्लीन-एयर ज़ोन खोजें',
+      refreshBtn: 'ज़ोन रीफ़्रेश करें',
+      searchingBtn: 'क्लीन-एयर ज़ोन खोजे जा रहे हैं...',
+      aiBadge: '✨ प्राणशील्ड माइक्रो-क्लाइमेट AI',
+      promptTitle: 'आसपास साफ हवा वाले सुरक्षित स्थान खोजें',
+      promptDesc:
+        'कम PM2.5 वाले घने हरित पार्क, शहरी जंगल और HEPA-फ़िल्टर्ड इंडोर पुस्तकालय/सेंटर व सुरक्षित पैदल मार्ग तुरंत देखें।',
+      pm25DropLabel: 'PM2.5 में कमी',
+      estAqiLabel: 'अनुमानित AQI',
+      bestWindowLabel: 'सबसे उपयुक्त समय',
+      routeTipLabel: 'माइक्रो-रूट सुझाव',
     },
     verdicts: {
       GO: { title: 'GO (सुरक्षित)', action: 'सामान्य बाहरी गतिविधियों के लिए हवा सुरक्षित है।' },

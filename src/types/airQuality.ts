@@ -86,3 +86,21 @@ export interface ChatMessage {
   text: string;
   timestamp: string;
 }
+
+export type SafeHavenType = 'forest' | 'park' | 'indoor_hepa';
+
+export interface SafeHavenZone {
+  name: string;
+  zoneType: SafeHavenType;
+  typeLabel: string;
+  pm25ReductionPct: number;
+  estimatedAqi: number;
+  bestWindow: string;
+  microRouteTip: string;
+}
+
+export interface SafeHavensResponse {
+  citySummary: string;
+  zones: SafeHavenZone[];
+}
+

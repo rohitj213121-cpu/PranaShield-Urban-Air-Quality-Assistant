@@ -4,6 +4,7 @@ import type {
   CoachTipResponse,
   Language,
   PlannerAdvice,
+  SafeHavensResponse,
 } from '../types/airQuality';
 import { postJsonSafe } from './aiClient';
 
@@ -397,3 +398,69 @@ Respond in ${langLabel}. Keep your response clear, scannable (use short bullet p
 
   return { reply };
 }
+
+export async function fetchSafeHavens(
+  params: {
+    city: string;
+    aqi: number;
+    pm25: number;
+    bestWindow: string;
+    language: Language;
+  },
+  signal?: AbortSignal
+): Promise<SafeHavensResponse> {
+  const clientKey = getEffectiveClientApiKey();
+  if (!clientKey) {
+    return postJsonSafe<SafeHavensResponse>('/api/safe-havens', params, { signal, timeoutMs: 3500 });
+  }
+
+  const langLabel =
+    params.language === 'hi' ? 'Hindi (Devanagari script, natural everyday Indian Hindi)' : 'English';
+
+  const rawText = await callGeminiDirect({
+    apiKey: clientKey,
+    expectJson: true,
+    signal,
+    systemInstruction:
+      'You are PranaShield Micro-Climate Advisor for Indian cities. Suggest authentic local green spaces and HEPA-filtered indoor venues with practical micro-route walking tips away from arterial traffic.',
+    prompt: `Recommend 3 real, well-known clean-air micro-zones in ${params.city}, India (current city AQI: ${params.aqi}, PM2.5: ${params.pm25} µg/m³, lowest smog window: ${params.bestWindow}).
+Include:
+1) A dense urban forest or biodiversity reserve,
+2) A major botanical park / green canopy garden,
+3) An indoor HEPA-filtered public sanctuary (library, cultural centre, museum, or modern mall atrium).
+Respond entirely in ${langLabel}. Return ONLY valid JSON:
+{
+  "citySummary": "short 1-sentence micro-climate summary",
+  "zones": [
+    {
+      "name": "real place name",
+      "zoneType": "forest" | "park" | "indoor_hepa",
+      "typeLabel": "short category label",
+      "pm25ReductionPct": 35,
+      "estimatedAqi": 240,
+      "bestWindow": "time window",
+      "microRouteTip": "1-2 sentence micro-route walking/transit tip avoiding road exhaust"
+    }
+  ]
+}`,
+  });
+
+  const parsed = stripMarkdownJson<SafeHavensResponse>(rawText);
+  if (!Array.isArray(parsed.zones) || parsed.zones.length === 0) {
+    throw new Error('Gemini returned an incomplete clean-air zones response.');
+  }
+
+  return {
+    citySummary: parsed.citySummary || '',
+    zones: parsed.zones.slice(0, 3).map((z) => ({
+      name: z.name,
+      zoneType: z.zoneType === 'forest' || z.zoneType === 'park' || z.zoneType === 'indoor_hepa' ? z.zoneType : 'park',
+      typeLabel: z.typeLabel,
+      pm25ReductionPct: Math.min(80, Math.max(10, Math.round(Number(z.pm25ReductionPct) || 35))),
+      estimatedAqi: Math.max(15, Math.round(Number(z.estimatedAqi) || Math.round(params.aqi * 0.65))),
+      bestWindow: z.bestWindow || params.bestWindow,
+      microRouteTip: z.microRouteTip,
+    })),
+  };
+}
+

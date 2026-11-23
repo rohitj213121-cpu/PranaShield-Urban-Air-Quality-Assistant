@@ -4,6 +4,8 @@ import { INDIAN_CITIES_DATA } from './data/cities';
 import { UI_COPY } from './data/translations';
 import { Header } from './components/Header';
 import { CityAqiSection } from './components/CityAqiSection';
+import { SmogCigaretteMeter } from './components/SmogCigaretteMeter';
+import { SafeHavenAdvisor } from './components/SafeHavenAdvisor';
 import { HealthPlannerSection } from './components/HealthPlannerSection';
 import { RoutineCoachSection } from './components/RoutineCoachSection';
 import { IndoorGuideSection } from './components/IndoorGuideSection';
@@ -58,6 +60,16 @@ export default function App() {
           onSelectCity={setSelectedCity}
           onAddCustomCity={handleAddCustomCity}
         />
+
+        {/* High-Impact Hackathon Modules: Smog-to-Cigarette Meter & Clean-Air Safe Haven Advisor */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+          <div className="lg:col-span-5 flex flex-col">
+            <SmogCigaretteMeter language={language} city={selectedCity} />
+          </div>
+          <div className="lg:col-span-7 flex flex-col">
+            <SafeHavenAdvisor language={language} city={selectedCity} apiKeyVersion={apiKeyVersion} />
+          </div>
+        </div>
 
         {/* Feature 2: AI Health & Outdoor Planner */}
         <HealthPlannerSection language={language} city={selectedCity} apiKeyVersion={apiKeyVersion} />
