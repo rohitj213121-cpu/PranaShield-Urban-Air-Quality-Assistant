@@ -1,6 +1,7 @@
 import { Cigarette, HeartPulse, Wind, ShieldCheck } from 'lucide-react';
 import type { CityAirData, Language } from '../types/airQuality';
 import { UI_COPY } from '../data/translations';
+import { computeLungImpactMetrics, type LungSeverityLevel } from '../utils/airQualityMetrics';
 
 interface SmogCigaretteMeterProps {
   language: Language;
@@ -12,55 +13,66 @@ const MAX_ICONS = 12;
 export function SmogCigaretteMeter({ language, city }: SmogCigaretteMeterProps) {
   const copy = UI_COPY[language].lungMeter;
 
-  // Berkeley Earth equivalence: ~1 cigarette per 22 µg/m³ of PM2.5 breathed over 24 hours
-  const cigarettesPerDay = Number((city.pm25 / 22).toFixed(1));
-  const wholeCigs = Math.floor(cigarettesPerDay);
-  const hasPartial = cigarettesPerDay - wholeCigs >= 0.25;
+  const {
+    cigarettesPerDay,
+    wholeCigs,
+    hasPartial,
+    recoveryHours,
+    weeklyCigs,
+    whoMultiple,
+    severityLevel,
+    meterPct,
+  } = computeLungImpactMetrics(city.pm25);
+
   const activeSlotCount = Math.min(MAX_ICONS, wholeCigs + (hasPartial ? 1 : 0));
   const overflowCount = Math.max(0, Math.round(cigarettesPerDay) - MAX_ICONS);
 
-  const recoveryHours = Math.min(72, Math.max(2, Math.round(cigarettesPerDay * 2.2)));
-  const weeklyCigs = Math.round(cigarettesPerDay * 7);
-  const whoMultiple = (city.pm25 / 15).toFixed(1);
+  const severityMap: Record<
+    LungSeverityLevel,
+    {
+      label: string;
+      accentText: string;
+      accentBg: string;
+      barBg: string;
+      iconActive: string;
+      iconPartial: string;
+    }
+  > = {
+    severe: {
+      label: copy.severitySevere,
+      accentText: 'text-red-700',
+      accentBg: 'bg-red-50 border-red-200 text-red-900',
+      barBg: 'bg-red-600',
+      iconActive: 'bg-red-50 border-red-200 text-red-600',
+      iconPartial: 'bg-red-50/60 border-red-200/80 text-red-400',
+    },
+    high: {
+      label: copy.severityHigh,
+      accentText: 'text-orange-700',
+      accentBg: 'bg-orange-50 border-orange-200 text-orange-900',
+      barBg: 'bg-orange-500',
+      iconActive: 'bg-orange-50 border-orange-200 text-orange-600',
+      iconPartial: 'bg-orange-50/60 border-orange-200/80 text-orange-400',
+    },
+    moderate: {
+      label: copy.severityModerate,
+      accentText: 'text-amber-700',
+      accentBg: 'bg-amber-50 border-amber-200 text-amber-900',
+      barBg: 'bg-amber-500',
+      iconActive: 'bg-amber-50 border-amber-200 text-amber-600',
+      iconPartial: 'bg-amber-50/60 border-amber-200/80 text-amber-400',
+    },
+    low: {
+      label: copy.severityLow,
+      accentText: 'text-emerald-700',
+      accentBg: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+      barBg: 'bg-emerald-600',
+      iconActive: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+      iconPartial: 'bg-emerald-50/60 border-emerald-200/80 text-emerald-500',
+    },
+  };
 
-  const severity =
-    cigarettesPerDay >= 8
-      ? {
-          label: copy.severitySevere,
-          accentText: 'text-red-700',
-          accentBg: 'bg-red-50 border-red-200 text-red-900',
-          barBg: 'bg-red-600',
-          iconActive: 'bg-red-50 border-red-200 text-red-600',
-          iconPartial: 'bg-red-50/60 border-red-200/80 text-red-400',
-        }
-      : cigarettesPerDay >= 4.5
-      ? {
-          label: copy.severityHigh,
-          accentText: 'text-orange-700',
-          accentBg: 'bg-orange-50 border-orange-200 text-orange-900',
-          barBg: 'bg-orange-500',
-          iconActive: 'bg-orange-50 border-orange-200 text-orange-600',
-          iconPartial: 'bg-orange-50/60 border-orange-200/80 text-orange-400',
-        }
-      : cigarettesPerDay >= 2
-      ? {
-          label: copy.severityModerate,
-          accentText: 'text-amber-700',
-          accentBg: 'bg-amber-50 border-amber-200 text-amber-900',
-          barBg: 'bg-amber-500',
-          iconActive: 'bg-amber-50 border-amber-200 text-amber-600',
-          iconPartial: 'bg-amber-50/60 border-amber-200/80 text-amber-400',
-        }
-      : {
-          label: copy.severityLow,
-          accentText: 'text-emerald-700',
-          accentBg: 'bg-emerald-50 border-emerald-200 text-emerald-900',
-          barBg: 'bg-emerald-600',
-          iconActive: 'bg-emerald-50 border-emerald-200 text-emerald-700',
-          iconPartial: 'bg-emerald-50/60 border-emerald-200/80 text-emerald-500',
-        };
-
-  const meterPct = Math.min(100, Math.round((cigarettesPerDay / 14) * 100));
+  const severity = severityMap[severityLevel];
 
   return (
     <section id="lung-impact-meter" aria-labelledby="lung-meter-heading" className="flex flex-col h-full">

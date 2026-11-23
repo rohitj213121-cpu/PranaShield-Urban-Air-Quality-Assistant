@@ -7,6 +7,7 @@ import type {
   SafeHavensResponse,
 } from '../types/airQuality';
 import { postJsonSafe } from './aiClient';
+import { normalizeVerdict } from './airQualityMetrics';
 
 const STORAGE_KEY = 'pranashield_gemini_api_key';
 const GEMINI_ENDPOINT =
@@ -248,16 +249,7 @@ Return ONLY valid JSON with these exact keys:
     hourlyTrend: Array<{ hour: string; pm25: number; aqi: number }>;
   }>(rawText);
 
-  const allowedVerdicts = ['GO', 'CAUTION', 'LIMIT', 'AVOID'] as const;
-  const normalizedVerdict = allowedVerdicts.includes(parsed.verdict as (typeof allowedVerdicts)[number])
-    ? (parsed.verdict as (typeof allowedVerdicts)[number])
-    : parsed.aqi > 300
-    ? 'AVOID'
-    : parsed.aqi > 200
-    ? 'LIMIT'
-    : parsed.aqi > 100
-    ? 'CAUTION'
-    : 'GO';
+  const normalizedVerdict = normalizeVerdict(parsed.verdict, Number(parsed.aqi));
 
   return {
     id: cityQuery.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
